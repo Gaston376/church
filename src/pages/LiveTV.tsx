@@ -79,6 +79,10 @@ const LiveTV = () => {
           loop: 0,
         },
         events: {
+          onReady: () => {
+            // Player is ready — if we're already offline, start playing
+            try { ytPlayerRef.current?.playVideo(); } catch {}
+          },
           onStateChange: (event: YT.OnStateChangeEvent) => {
             // 0 = ended → advance to next
             if (event.data === 0) {
@@ -112,9 +116,9 @@ const LiveTV = () => {
   // Pause YT when live stream starts, resume when it ends
   useEffect(() => {
     if (status === "live") {
-      ytPlayerRef.current?.pauseVideo();
+      try { ytPlayerRef.current?.pauseVideo(); } catch {}
     } else if (status === "offline") {
-      ytPlayerRef.current?.playVideo();
+      try { ytPlayerRef.current?.playVideo(); } catch {}
     }
   }, [status]);
 
