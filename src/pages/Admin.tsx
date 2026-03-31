@@ -4,7 +4,7 @@ import { Users, Send, RefreshCw, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/Layout";
 
-const API = "https://towerintercessoryministry.workers.dev";
+const API = "https://towerintercessoryministry.towerintercessoryministry.workers.dev";
 
 interface Subscriber {
   id: number;

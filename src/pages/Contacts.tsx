@@ -18,7 +18,7 @@ const contactInfo = [
   { icon: Clock, label: "Service Times", value: "Sunday 10:00 AM | Wed 6:00 PM" },
 ];
 
-const API = "https://towerintercessoryministry.workers.dev";
+const API = "https://towerintercessoryministry.towerintercessoryministry.workers.dev";
 
 const Contacts = () => {
   const [form, setForm] = useState({ full_name: "", email: "", message: "" });

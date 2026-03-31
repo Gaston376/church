@@ -101,7 +101,7 @@ function updateHtml(title: string, content: string, date: string) {
           <table width="100%" cellpadding="0" cellspacing="0">
             <tr>
               <td align="center" style="padding:8px 0 24px">
-                <a href="https://towerintercessoryministry.workers.dev/updates"
+                <a href="https://towerintercessoryministry.towerintercessoryministry.workers.dev/updates"
                    style="display:inline-block;background:linear-gradient(135deg,#c0392b,#e67e22);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:50px;font-size:15px;font-weight:bold;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(192,57,43,0.35)">
                   Read Full Update
                 </a>
@@ -261,7 +261,7 @@ video{width:100%;border-radius:10px;background:#000;max-height:220px}
 let subs=[];
 let ws=null,pc=null,stream=null,viewers={};
 let intentionalClose=false;
-const WS='wss://towerintercessoryministry.workers.dev/stream';
+const WS='wss://towerintercessoryministry.towerintercessoryministry.workers.dev/stream';
 
 async function startLive(){
   const title=document.getElementById('live-title').value||'Live Service';
@@ -636,7 +636,7 @@ export default {
             <h2 style="color:#1a1a1a;font-size:22px;margin-bottom:8px">We are Live, ${name}!</h2>
             <h3 style="color:#c0392b;font-size:18px;margin-bottom:12px">${title || "Live Service"}</h3>
             ${description ? `<p style="color:#555;line-height:1.7;margin-bottom:24px">${description}</p>` : ""}
-            <a href="https://towerintercessoryministry.workers.dev/live"
+            <a href="https://towerintercessoryministry.towerintercessoryministry.workers.dev/live"
                style="display:inline-block;background:linear-gradient(135deg,#c0392b,#e67e22);color:#fff;text-decoration:none;padding:16px 40px;border-radius:50px;font-size:16px;font-weight:bold;box-shadow:0 4px 14px rgba(192,57,43,0.35)">
               Watch Live Now
             </a>

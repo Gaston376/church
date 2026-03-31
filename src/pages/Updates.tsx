@@ -11,7 +11,7 @@ import event3 from "@/assets/event-3.jpg";
 import church1 from "@/assets/church-1.jpg";
 import intercessory from "@/assets/intercessory.jpg";
 
-const API = "https://towerintercessoryministry.workers.dev";
+const API = "https://towerintercessoryministry.towerintercessoryministry.workers.dev";
 const fallbackImages = [intercessory, worship3, worship4, community1, prayer1, event3, church1];
 
 interface Update { id: number; title: string; content: string; date: string; }

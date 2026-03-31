@@ -16,8 +16,8 @@ const PLAYLIST = [
   "SFCpN8w81cc",
 ];
 
-const BACKEND_URL = "https://towerintercessoryministry.workers.dev";
-const WS_URL = "wss://towerintercessoryministry.workers.dev/stream";
+const BACKEND_URL = "https://towerintercessoryministry.towerintercessoryministry.workers.dev";
+const WS_URL = "wss://towerintercessoryministry.towerintercessoryministry.workers.dev/stream";
 const STATUS_URL = `${BACKEND_URL}/stream/status`;
 
 interface StreamInfo { title: string; description: string; }

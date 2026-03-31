@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Send, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const API = "https://towerintercessoryministry.workers.dev";
+const API = "https://towerintercessoryministry.towerintercessoryministry.workers.dev";
 
 const SubscribeForm = () => {
   const [form, setForm] = useState({ full_name: "", email: "", whatsapp: "", location: "" });
