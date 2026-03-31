@@ -1,0 +1,20 @@
+name = "towerintercessoryministry"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+account_id = "eede19e214f9b99d6a18f16f241e192f"
+
+[assets]
+directory = "./public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "subscribers"
+database_id = "cf0df486-4b69-4fbd-835b-7986768e1659"
+
+[[durable_objects.bindings]]
+name = "STREAM_HUB"
+class_name = "StreamHub"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["StreamHub"]

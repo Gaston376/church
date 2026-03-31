@@ -1,0 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Open+Sans:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 30 20% 97%;
+    --foreground: 0 0% 12%;
+
+    --card: 30 15% 95%;
+    --card-foreground: 0 0% 12%;
+
+    --popover: 30 20% 97%;
+    --popover-foreground: 0 0% 12%;
+
+    --primary: 0 78% 42%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 42 96% 56%;
+    --secondary-foreground: 0 0% 10%;
+
+    --muted: 30 10% 90%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 42 96% 56%;
+    --accent-foreground: 0 0% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 30 15% 88%;
+    --input: 30 15% 88%;
+    --ring: 0 78% 42%;
+
+    --radius: 0.75rem;
+
+    --gradient-hero: linear-gradient(135deg, hsl(0 78% 42%), hsl(20 90% 48%), hsl(42 96% 56%));
+    --gradient-warm: linear-gradient(180deg, hsl(30 20% 97%), hsl(30 30% 93%));
+    --shadow-warm: 0 8px 32px -8px hsl(0 78% 42% / 0.15);
+  --shadow-gold: 0 4px 20px -4px hsl(42 96% 56% / 0.3);
+
+    --gradient-page: radial-gradient(ellipse at 20% 0%, hsl(0 78% 42% / 0.06) 0%, transparent 50%),
+                     radial-gradient(ellipse at 80% 20%, hsl(42 96% 56% / 0.08) 0%, transparent 40%),
+                     radial-gradient(ellipse at 40% 80%, hsl(0 78% 42% / 0.04) 0%, transparent 50%),
+                     radial-gradient(ellipse at 90% 90%, hsl(42 96% 56% / 0.05) 0%, transparent 40%);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-hero);
+  }
+
+  .bg-hero-gradient {
+    background-image: var(--gradient-hero);
+  }
+
+  .shadow-warm {
+    box-shadow: var(--shadow-warm);
+  }
+
+  .shadow-gold {
+    box-shadow: var(--shadow-gold);
+  }
+
+  .bg-page-pattern {
+    background-image: var(--gradient-page);
+    background-attachment: fixed;
+    position: relative;
+  }
+
+  .bg-page-pattern::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 25% 25%, hsl(42 96% 56% / 0.03) 1px, transparent 1px),
+      radial-gradient(circle at 75% 75%, hsl(0 78% 42% / 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .bg-section-glow {
+    position: relative;
+  }
+
+  .bg-section-glow::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, hsl(42 96% 56% / 0.4), hsl(0 78% 42% / 0.3), transparent);
+  }
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
