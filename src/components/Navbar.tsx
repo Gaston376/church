@@ -10,6 +10,7 @@ const navLinks = [
   { to: "/projects", label: "Projects" },
   { to: "/updates", label: "Updates" },
   { to: "/live", label: "Live TV" },
+  { to: "/give", label: "Give & Support" },
   { to: "/contacts", label: "Contacts" },
 ];
 
@@ -32,8 +33,9 @@ const Navbar = () => {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         transparent
           ? "bg-transparent border-b border-transparent"
-          : "bg-foreground/90 backdrop-blur-xl shadow-warm border-b border-white/10"
+          : "border-b border-white/10"
       }`}
+      style={transparent ? {} : { background: "rgba(4, 8, 35, 0.85)", backdropFilter: "blur(16px)" }}
     >
       <div className="container mx-auto flex items-center justify-between h-20 px-4">
         <Link to="/" className="flex items-center gap-3">
@@ -82,7 +84,8 @@ const Navbar = () => {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="md:hidden overflow-hidden bg-foreground/90 backdrop-blur-xl border-b border-white/10"
+            className="md:hidden overflow-hidden border-b border-white/10"
+            style={{ background: "rgba(4, 8, 35, 0.95)", backdropFilter: "blur(16px)" }}
           >
             <div className="flex flex-col p-4 gap-1">
               {navLinks.map((link) => (

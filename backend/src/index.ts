@@ -342,7 +342,7 @@ function endLive(){
   document.getElementById('end-live-btn').style.display='none';
   document.getElementById('viewer-count').style.display='none';
   document.getElementById('chat-box').style.display='none';
-  document.getElementById('chat-box').innerHTML='';
+  // Keep chat history visible — don't wipe on end
 }
 
 async function load(){

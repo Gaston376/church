@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MapPin, Phone, Mail, Clock, Send } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Send, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/Layout";
 import PageHero from "@/components/PageHero";
@@ -12,10 +12,11 @@ import church4 from "@/assets/church-4.jpg";
 import worship5 from "@/assets/worship-5.jpg";
 
 const contactInfo = [
+  { icon: User, label: "Lead Pastor", value: "Prophet Chibuzor Nwankwo" },
   { icon: MapPin, label: "Location", value: "Massajja, Wakiso District, Kampala, Uganda" },
-  { icon: Phone, label: "Phone", value: "+256 700 000 000" },
-  { icon: Mail, label: "Email", value: "info@massajjatower.org" },
-  { icon: Clock, label: "Service Times", value: "Sunday 10:00 AM | Wed 6:00 PM" },
+  { icon: Phone, label: "Phone", value: "+256 752 734 581" },
+  { icon: Mail, label: "Email", value: "towerintercessoryministry@gmail.com" },
+  { icon: Clock, label: "Service Times", value: "Tue 9:00 AM | Thu 10:00 AM | Sun 9:00 AM" },
 ];
 
 const API = "https://towerintercessoryministry.towerintercessoryministry.workers.dev";

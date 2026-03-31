@@ -57,7 +57,7 @@ export class StreamHub {
         title: title || "Live Service", 
         description: description || "" 
       };
-      this.comments = [];
+      // Don't wipe comments on reconnect — only wipe on explicit end-stream
       
       // Send current viewer count to broadcaster
       const viewerCount = this.state.getWebSockets("viewer").length;
@@ -227,7 +227,7 @@ export class StreamHub {
     if (session?.role === "broadcaster") {
       this.broadcaster = null;
       this.streamInfo = null;
-      this.comments = [];
+      // Don't wipe comments on unexpected disconnect — only on explicit end-stream
       this._broadcastViewers({ type: "stream-ended" });
     } else if (session) {
       if (this.broadcaster) {

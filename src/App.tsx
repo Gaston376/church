@@ -9,6 +9,9 @@ import Projects from "./pages/Projects.tsx";
 import Updates from "./pages/Updates.tsx";
 import Contacts from "./pages/Contacts.tsx";
 import LiveTV from "./pages/LiveTV.tsx";
+import PrivacyPolicy from "./pages/PrivacyPolicy.tsx";
+import TermsOfUse from "./pages/TermsOfUse.tsx";
+import Give from "./pages/Give.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -26,6 +29,9 @@ const App = () => (
           <Route path="/updates" element={<Updates />} />
           <Route path="/contacts" element={<Contacts />} />
           <Route path="/live" element={<LiveTV />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-of-use" element={<TermsOfUse />} />
+          <Route path="/give" element={<Give />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

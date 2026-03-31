@@ -4,17 +4,18 @@ import PageHero from "@/components/PageHero";
 import sunday from "@/assets/sunday.jpg";
 import intercessory from "@/assets/intercessory.jpg";
 import wednesdayBible from "@/assets/wednesday-bible.jpg";
-import youthFellowship from "@/assets/youthfellowship.jpg";
 import choir from "@/assets/choir.jpg";
 import choir1 from "@/assets/choir1.jpg";
 
+import heroWorship from "@/assets/hero-worship.jpg";
+
 const programs = [
-  { title: "Sunday Worship Service", time: "Every Sunday, 10:00 AM - 1:00 PM", desc: "A powerful time of praise, worship, and the preaching of the Word. All are welcome to experience God's presence.", img: sunday },
-  { title: "Intercessory Prayer", time: "Mon-Fri, 6:00 AM - 7:00 AM", desc: "Early morning prayer sessions lifting up the church, nation, and the world before God's throne.", img: intercessory },
-  { title: "Wednesday Bible Study", time: "Every Wednesday, 6:00 PM - 8:00 PM", desc: "In-depth study of the scriptures for spiritual growth and maturity.", img: wednesdayBible },
-  { title: "Youth Fellowship", time: "Every Saturday, 3:00 PM - 5:00 PM", desc: "A vibrant gathering for young people to grow in faith, build friendships, and discover their purpose.", img: youthFellowship },
+  { title: "Sunday Bible Study", time: "Every Sunday, 9:00 AM - 10:00 AM", desc: "In-depth study of the scriptures to prepare hearts before the main service.", img: wednesdayBible },
+  { title: "Sunday Worship Service", time: "Every Sunday, 10:00 AM - 2:00 PM", desc: "A powerful time of praise, worship, and the preaching of the Word. All are welcome to experience God's presence.", img: sunday },
+  { title: "Prayer Warriors Day", time: "Every Tuesday, 9:00 AM - 12:00 PM", desc: "Dedicated intercession and spiritual warfare prayer for the church, nation, and the nations.", img: intercessory },
+  { title: "Counselling", time: "Every Tuesday, 12:00 PM - 1:30 PM", desc: "Personal and spiritual counselling sessions available after Prayer Warriors Day.", img: choir1 },
+  { title: "Deliverance & Prophetic", time: "Every Thursday, 10:00 AM - 2:00 PM", desc: "A powerful service of deliverance, healing, and prophetic ministry under the anointing of the Holy Spirit.", img: heroWorship },
   { title: "Praise & Worship Night", time: "Last Friday of every month", desc: "An evening of deep worship and spiritual renewal through music and praise.", img: choir },
-  { title: "Children's Ministry", time: "Every Sunday, 10:00 AM", desc: "Age-appropriate Bible teaching, crafts, and activities for children during Sunday service.", img: choir1 },
 ];
 
 const fadeUp = {

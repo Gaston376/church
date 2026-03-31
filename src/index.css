@@ -6,14 +6,14 @@
 
 @layer base {
   :root {
-    --background: 30 20% 97%;
-    --foreground: 0 0% 12%;
+    --background: 0 0% 95%;
+    --foreground: 0 0% 95%;
 
-    --card: 30 15% 95%;
-    --card-foreground: 0 0% 12%;
+    --card: 220 30% 12%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 30 20% 97%;
-    --popover-foreground: 0 0% 12%;
+    --popover: 220 30% 10%;
+    --popover-foreground: 0 0% 95%;
 
     --primary: 0 78% 42%;
     --primary-foreground: 0 0% 100%;
@@ -21,8 +21,8 @@
     --secondary: 42 96% 56%;
     --secondary-foreground: 0 0% 10%;
 
-    --muted: 30 10% 90%;
-    --muted-foreground: 0 0% 40%;
+    --muted: 220 20% 20%;
+    --muted-foreground: 0 0% 65%;
 
     --accent: 42 96% 56%;
     --accent-foreground: 0 0% 10%;
@@ -30,21 +30,15 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 30 15% 88%;
-    --input: 30 15% 88%;
+    --border: 220 20% 25%;
+    --input: 220 20% 20%;
     --ring: 0 78% 42%;
 
     --radius: 0.75rem;
 
     --gradient-hero: linear-gradient(135deg, hsl(0 78% 42%), hsl(20 90% 48%), hsl(42 96% 56%));
-    --gradient-warm: linear-gradient(180deg, hsl(30 20% 97%), hsl(30 30% 93%));
-    --shadow-warm: 0 8px 32px -8px hsl(0 78% 42% / 0.15);
-  --shadow-gold: 0 4px 20px -4px hsl(42 96% 56% / 0.3);
-
-    --gradient-page: radial-gradient(ellipse at 20% 0%, hsl(0 78% 42% / 0.06) 0%, transparent 50%),
-                     radial-gradient(ellipse at 80% 20%, hsl(42 96% 56% / 0.08) 0%, transparent 40%),
-                     radial-gradient(ellipse at 40% 80%, hsl(0 78% 42% / 0.04) 0%, transparent 50%),
-                     radial-gradient(ellipse at 90% 90%, hsl(42 96% 56% / 0.05) 0%, transparent 40%);
+    --shadow-warm: 0 8px 32px -8px hsl(0 78% 42% / 0.25);
+    --shadow-gold: 0 4px 20px -4px hsl(42 96% 56% / 0.35);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -63,11 +57,39 @@
   }
 
   body {
-    @apply bg-background text-foreground font-body antialiased;
+    background: transparent !important;
+    @apply text-foreground font-body antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;
+  }
+
+  /* Make ALL backgrounds transparent — starfield must always show through */
+  section,
+  footer > *,
+  .bg-background,
+  .bg-background\/80,
+  .bg-card,
+  .bg-muted,
+  .bg-muted\/20,
+  .bg-foreground,
+  [class*="bg-background"],
+  [class*="bg-card"],
+  [class*="bg-muted"],
+  [class*="bg-foreground"] {
+    background-color: transparent !important;
+    background-image: none !important;
+  }
+
+  /* Cards — fully transparent, no blur, just a faint border so stars show through */
+  .rounded-xl,
+  .rounded-2xl {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    box-shadow: none !important;
   }
 }
 
@@ -90,21 +112,7 @@
   }
 
   .bg-page-pattern {
-    background-image: var(--gradient-page);
-    background-attachment: fixed;
-    position: relative;
-  }
-
-  .bg-page-pattern::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      radial-gradient(circle at 25% 25%, hsl(42 96% 56% / 0.03) 1px, transparent 1px),
-      radial-gradient(circle at 75% 75%, hsl(0 78% 42% / 0.03) 1px, transparent 1px);
-    background-size: 60px 60px;
-    pointer-events: none;
-    z-index: 0;
+    background: transparent;
   }
 
   .bg-section-glow {
@@ -120,6 +128,13 @@
     width: 60%;
     height: 1px;
     background: linear-gradient(90deg, transparent, hsl(42 96% 56% / 0.4), hsl(0 78% 42% / 0.3), transparent);
+  }
+
+  /* Glass card used across pages */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 }
 

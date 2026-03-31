@@ -170,7 +170,7 @@ const LiveTV = () => {
         if (msg.type === "stream-ended") {
           setStatus("offline");
           setInfo(null);
-          setComments([]);
+          // Keep comments visible after stream ends
           closeWS();
         }
 
@@ -267,7 +267,19 @@ const LiveTV = () => {
 
   const sendComment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!chatInput.trim() || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+    if (!chatInput.trim()) return;
+    // Open a WS if not already connected (e.g. during offline/church TV mode)
+    if (!wsRef.current || wsRef.current.readyState > WebSocket.OPEN) {
+      const name = viewerName || "Guest";
+      const ws = new WebSocket(`${WS_URL}?role=viewer&name=${encodeURIComponent(name)}`);
+      wsRef.current = ws;
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ type: "chat", text: chatInput.trim() }));
+        setChatInput("");
+      };
+      ws.onclose = () => { wsRef.current = null; };
+      return;
+    }
     wsRef.current.send(JSON.stringify({ type: "chat", text: chatInput.trim() }));
     setChatInput("");
   };
@@ -501,12 +513,12 @@ const LiveTV = () => {
                     value={chatInput}
                     onChange={e => setChatInput(e.target.value)}
                     placeholder={nameSet ? "Say something..." : "Join to chat"}
-                    disabled={!nameSet || status !== "live"}
+                    disabled={!nameSet}
                     className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-background text-sm placeholder:text-background/30 outline-none focus:border-primary disabled:opacity-40"
                   />
                   <button
                     type="submit"
-                    disabled={!nameSet || !chatInput.trim() || status !== "live"}
+                    disabled={!nameSet || !chatInput.trim()}
                     className="bg-primary text-primary-foreground p-2 rounded-lg disabled:opacity-40"
                   >
                     <Send size={15} />
