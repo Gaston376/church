@@ -179,6 +179,10 @@ const LiveTV = () => {
           setComments(prev => [...prev.slice(-199), msg.comment]);
         }
 
+        if (msg.type === "comment-deleted") {
+          setComments(prev => prev.filter(c => c.id !== msg.id));
+        }
+
         if (msg.type === "offer") {
           if (pc) { try { pc.close(); } catch {} }
           pc = new RTCPeerConnection({ iceServers: [

@@ -23,11 +23,25 @@ export class StreamHub {
         viewers,
         info: this.streamInfo,
         comments: this.comments.slice(-50),
-      }), { 
-        headers: { 
-          "Content-Type": "application/json", 
-          "Access-Control-Allow-Origin": "*" 
-        } 
+      }), { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
+    }
+
+    // REST: get all comments (admin)
+    if (request.method === "GET" && url.pathname === "/stream/comments") {
+      return new Response(JSON.stringify({ comments: this.comments }), {
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
+    }
+
+    // REST: delete a comment by id (admin)
+    const delMatch = url.pathname.match(/^\/stream\/comments\/(.+)$/);
+    if (request.method === "DELETE" && delMatch) {
+      const id = delMatch[1];
+      this.comments = this.comments.filter(c => c.id !== id);
+      // Broadcast deletion to all connected clients
+      this._broadcastAll({ type: "comment-deleted", id });
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       });
     }
 

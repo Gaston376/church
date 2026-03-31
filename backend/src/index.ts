@@ -101,7 +101,7 @@ function updateHtml(title: string, content: string, date: string) {
           <table width="100%" cellpadding="0" cellspacing="0">
             <tr>
               <td align="center" style="padding:8px 0 24px">
-                <a href="https://towerintercessoryministry.towerintercessoryministry.workers.dev/updates"
+                <a href="https://tower-of-intercessory-ministry.vercel.app/updates"
                    style="display:inline-block;background:linear-gradient(135deg,#c0392b,#e67e22);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:50px;font-size:15px;font-weight:bold;letter-spacing:0.5px;box-shadow:0 4px 14px rgba(192,57,43,0.35)">
                   Read Full Update
                 </a>
@@ -256,11 +256,17 @@ video{width:100%;border-radius:10px;background:#000;max-height:220px}
   <div id="ulist"><div style="text-align:center;padding:30px;color:#bbb;font-size:14px">Loading...</div></div>
 </div>
 
+<div class="card" style="margin-top:20px">
+  <h2>Live Chat Comments <span class="badge" id="ccnt">0</span></h2>
+  <div id="clist"><div style="text-align:center;padding:30px;color:#bbb;font-size:14px">No comments yet.</div></div>
+</div>
+
 </div>
 <script>
 let subs=[];
 let ws=null,pc=null,stream=null,viewers={};
 let intentionalClose=false;
+let notifiedLive=false;
 let liveTitle='',liveDesc='';
 const WS='wss://towerintercessoryministry.towerintercessoryministry.workers.dev/stream';
 
@@ -271,7 +277,11 @@ function connectWS(){
     document.getElementById('live-status').innerHTML='<span class="live-badge"><span class="live-dot"></span>LIVE</span>';
     document.getElementById('go-live-btn').style.display='none';
     document.getElementById('end-live-btn').style.display='block';
-    fetch('/go-live',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:liveTitle,description:liveDesc})});
+    // Only notify subscribers once per live session — not on every reconnect
+    if(!notifiedLive){
+      notifiedLive=true;
+      fetch('/go-live',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:liveTitle,description:liveDesc})});
+    }
   };
   ws.onerror=()=>{};
   ws.onmessage=async(e)=>{
@@ -317,6 +327,7 @@ async function startLive(){
     const preview=document.getElementById('preview');
     preview.srcObject=stream;preview.style.display='block';
     intentionalClose=false;
+    notifiedLive=false;
     connectWS();
   }catch(err){alert('Camera access denied or error: '+err.message);}
 }
@@ -331,6 +342,7 @@ function addComment(c){
 
 function endLive(){
   intentionalClose=true;
+  notifiedLive=false;
   if(ws){ws.send(JSON.stringify({type:'end-stream'}));ws.close();}
   if(stream)stream.getTracks().forEach(t=>t.stop());
   Object.values(viewers).forEach(p=>p.close());
@@ -420,7 +432,32 @@ document.getElementById('form').onsubmit=async(e)=>{
   btn.disabled=false;btn.textContent='Post Update & Notify All Subscribers';
   if(d.success){document.getElementById('res').innerHTML='<div class="ok">&#10003; Update posted! Emails sent to '+d.sent+'/'+d.total+' subscribers.'+(d.failed?' ('+d.failed+' failed)':'')+'</div>';document.getElementById('title').value='';document.getElementById('msg').value='';document.getElementById('date').value='';}
 };
-load();loadUpdates();
+async function loadComments(){
+  try{
+    const r=await fetch('/stream/comments');
+    const d=await r.json();
+    const comments=d.comments||[];
+    document.getElementById('ccnt').textContent=comments.length;
+    const el=document.getElementById('clist');
+    if(!comments.length){el.innerHTML='<div style="text-align:center;padding:30px;color:#bbb;font-size:14px">No comments yet.</div>';return;}
+    el.innerHTML=comments.map(c=>\`
+      <div id="cmt-\${c.id}" style="background:#f9f9f9;border-radius:10px;padding:12px 14px;margin-bottom:8px;border:1px solid #eee;display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div style="flex:1;min-width:0">
+          <span style="font-weight:600;color:#c0392b;font-size:13px">\${c.name}</span>
+          <span style="color:#aaa;font-size:11px;margin-left:8px">\${new Date(c.time).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
+          <p style="margin:4px 0 0;font-size:13px;color:#444;line-height:1.4">\${c.text}</p>
+        </div>
+        <button onclick="deleteComment('\${c.id}')" style="background:#c0392b;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:bold;cursor:pointer;flex-shrink:0">Delete</button>
+      </div>\`).join('');
+  }catch(e){console.error(e);}
+}
+
+async function deleteComment(id){
+  if(!confirm('Delete this comment?'))return;
+  await fetch('/stream/comments/'+id,{method:'DELETE'});
+  loadComments();
+}
+load();loadUpdates();loadComments();setInterval(loadComments,5000);
 </script></body></html>`;
 }
 
@@ -630,7 +667,7 @@ export default {
             <h2 style="color:#1a1a1a;font-size:22px;margin-bottom:8px">We are Live, ${name}!</h2>
             <h3 style="color:#c0392b;font-size:18px;margin-bottom:12px">${title || "Live Service"}</h3>
             ${description ? `<p style="color:#555;line-height:1.7;margin-bottom:24px">${description}</p>` : ""}
-            <a href="https://towerintercessoryministry.towerintercessoryministry.workers.dev/live"
+            <a href="https://tower-of-intercessory-ministry.vercel.app/live"
                style="display:inline-block;background:linear-gradient(135deg,#c0392b,#e67e22);color:#fff;text-decoration:none;padding:16px 40px;border-radius:50px;font-size:16px;font-weight:bold;box-shadow:0 4px 14px rgba(192,57,43,0.35)">
               Watch Live Now
             </a>
@@ -686,7 +723,7 @@ export default {
     }
 
     // WebSocket signaling for live stream — proxied to Durable Object
-    if (pathname === "/stream" || pathname === "/stream/status") {
+    if (pathname === "/stream" || pathname === "/stream/status" || pathname.startsWith("/stream/comments")) {
       const id = env.STREAM_HUB.idFromName("main");
       const hub = env.STREAM_HUB.get(id);
       // Must pass an absolute URL to the Durable Object
