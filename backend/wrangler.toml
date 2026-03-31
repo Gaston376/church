@@ -1,6 +1,7 @@
 name = "towerintercessoryministry"
 main = "src/index.ts"
-compatibility_date = "2024-01-01"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
 account_id = "eede19e214f9b99d6a18f16f241e192f"
 
 [assets]

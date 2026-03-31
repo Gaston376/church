@@ -261,69 +261,63 @@ video{width:100%;border-radius:10px;background:#000;max-height:220px}
 let subs=[];
 let ws=null,pc=null,stream=null,viewers={};
 let intentionalClose=false;
+let liveTitle='',liveDesc='';
 const WS='wss://towerintercessoryministry.towerintercessoryministry.workers.dev/stream';
 
+function connectWS(){
+  if(intentionalClose)return;
+  ws=new WebSocket(WS+'?role=broadcaster&title='+encodeURIComponent(liveTitle)+'&description='+encodeURIComponent(liveDesc));
+  ws.onopen=()=>{
+    document.getElementById('live-status').innerHTML='<span class="live-badge"><span class="live-dot"></span>LIVE</span>';
+    document.getElementById('go-live-btn').style.display='none';
+    document.getElementById('end-live-btn').style.display='block';
+    fetch('/go-live',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:liveTitle,description:liveDesc})});
+  };
+  ws.onerror=()=>{};
+  ws.onmessage=async(e)=>{
+    const msg=JSON.parse(e.data);
+    if(msg.type==='viewer-joined'){
+      const vid=msg.viewerId;
+      const p=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+      viewers[vid]=p;
+      stream.getTracks().forEach(t=>p.addTrack(t,stream));
+      p.onicecandidate=(ev)=>{if(ev.candidate)ws.send(JSON.stringify({type:'ice-candidate',candidate:ev.candidate,viewerId:vid}));};
+      const offer=await p.createOffer();
+      await p.setLocalDescription(offer);
+      ws.send(JSON.stringify({type:'offer',sdp:offer,viewerId:vid}));
+    }
+    if(msg.type==='answer'&&viewers[msg.viewerId]){
+      await viewers[msg.viewerId].setRemoteDescription(new RTCSessionDescription(msg.sdp));
+    }
+    if(msg.type==='ice-candidate'&&viewers[msg.viewerId]){
+      try{await viewers[msg.viewerId].addIceCandidate(new RTCIceCandidate(msg.candidate));}catch{}
+    }
+    if(msg.type==='viewer-left'&&viewers[msg.viewerId]){
+      viewers[msg.viewerId].close();delete viewers[msg.viewerId];
+    }
+    if(msg.type==='viewer-count'){
+      document.getElementById('vc').textContent=msg.count;
+      document.getElementById('viewer-count').style.display='block';
+    }
+    if(msg.type==='chat'&&msg.comment){addComment(msg.comment);}
+  };
+  ws.onclose=(e)=>{
+    if(intentionalClose)return;
+    // Reconnect automatically — keep camera running
+    document.getElementById('live-status').textContent='Reconnecting...';
+    setTimeout(connectWS,2000);
+  };
+}
+
 async function startLive(){
-  const title=document.getElementById('live-title').value||'Live Service';
-  const desc=document.getElementById('live-desc').value||'';
+  liveTitle=document.getElementById('live-title').value||'Live Service';
+  liveDesc=document.getElementById('live-desc').value||'';
   try{
     stream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
     const preview=document.getElementById('preview');
     preview.srcObject=stream;preview.style.display='block';
     intentionalClose=false;
-    ws=new WebSocket(WS+'?role=broadcaster&title='+encodeURIComponent(title)+'&description='+encodeURIComponent(desc));
-    ws.onopen=()=>{
-      document.getElementById('live-status').innerHTML='<span class="live-badge"><span class="live-dot"></span>LIVE</span>';
-      document.getElementById('go-live-btn').style.display='none';
-      document.getElementById('end-live-btn').style.display='block';
-      // Notify all subscribers by email
-      fetch('/go-live',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:title,description:desc})});
-    };
-    ws.onerror=(err)=>{
-      console.error('WebSocket error',err);
-      if(!intentionalClose){
-        document.getElementById('live-status').textContent='Connection error — retrying...';
-        setTimeout(()=>startLive(),3000);
-      }
-    };
-    ws.onmessage=async(e)=>{
-      const msg=JSON.parse(e.data);
-      if(msg.type==='viewer-joined'){
-        const vid=msg.viewerId;
-        const p=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
-        viewers[vid]=p;
-        stream.getTracks().forEach(t=>p.addTrack(t,stream));
-        p.onicecandidate=(ev)=>{if(ev.candidate)ws.send(JSON.stringify({type:'ice-candidate',candidate:ev.candidate,viewerId:vid}));};
-        const offer=await p.createOffer();
-        await p.setLocalDescription(offer);
-        ws.send(JSON.stringify({type:'offer',sdp:offer,viewerId:vid}));
-      }
-      if(msg.type==='answer'&&viewers[msg.viewerId]){
-        await viewers[msg.viewerId].setRemoteDescription(new RTCSessionDescription(msg.sdp));
-      }
-      if(msg.type==='ice-candidate'&&viewers[msg.viewerId]){
-        try{await viewers[msg.viewerId].addIceCandidate(new RTCIceCandidate(msg.candidate));}catch{}
-      }
-      if(msg.type==='viewer-left'&&viewers[msg.viewerId]){
-        viewers[msg.viewerId].close();delete viewers[msg.viewerId];
-      }
-      if(msg.type==='viewer-count'){
-        document.getElementById('vc').textContent=msg.count;
-        document.getElementById('viewer-count').style.display='block';
-      }
-      if(msg.type==='chat'&&msg.comment){
-        addComment(msg.comment);
-      }
-    };
-    ws.onclose=(e)=>{
-      if(intentionalClose) return; // admin clicked End Stream — already handled
-      // Unexpected close — reset UI and show error
-      document.getElementById('live-status').textContent='Disconnected (code '+e.code+')';
-      document.getElementById('go-live-btn').style.display='block';
-      document.getElementById('end-live-btn').style.display='none';
-      document.getElementById('preview').style.display='none';
-      document.getElementById('viewer-count').style.display='none';
-    };
+    connectWS();
   }catch(err){alert('Camera access denied or error: '+err.message);}
 }
 
@@ -695,7 +689,8 @@ export default {
     if (pathname === "/stream" || pathname === "/stream/status") {
       const id = env.STREAM_HUB.idFromName("main");
       const hub = env.STREAM_HUB.get(id);
-      return hub.fetch(request);
+      // Must pass an absolute URL to the Durable Object
+      return hub.fetch(new Request(request.url, request));
     }
 
     return json({ error: "Not found" }, 404);

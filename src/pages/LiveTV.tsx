@@ -153,6 +153,8 @@ const LiveTV = () => {
         if (msg.type === "stream-info" || msg.type === "stream-started") {
           setInfo(msg.info);
           setStatus("connecting");
+          // Reconnect so server sends viewer-joined → broadcaster sends offer
+          ws.close();
         }
 
         if (msg.type === "stream-ended") {
@@ -169,16 +171,27 @@ const LiveTV = () => {
         }
 
         if (msg.type === "offer") {
-          pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+          if (pc) { try { pc.close(); } catch {} }
+          pc = new RTCPeerConnection({ iceServers: [
+            { urls: "stun:stun.l.google.com:19302" },
+            { urls: "stun:stun1.l.google.com:19302" },
+          ]});
           pcRef.current = pc;
           pc.ontrack = (event) => {
+            const stream = event.streams[0];
             if (videoRef.current) {
-              videoRef.current.srcObject = event.streams[0];
-              setStatus("live");
+              videoRef.current.srcObject = stream;
+              videoRef.current.play().catch(() => {});
             }
+            setStatus("live");
           };
           pc.onicecandidate = (event) => {
             if (event.candidate) ws.send(JSON.stringify({ type: "ice-candidate", candidate: event.candidate }));
+          };
+          pc.onconnectionstatechange = () => {
+            if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
+              setStatus("offline");
+            }
           };
           await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
           const answer = await pc.createAnswer();
