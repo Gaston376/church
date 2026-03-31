@@ -135,37 +135,42 @@ const LiveTV = () => {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [comments]);
 
-  // WebSocket + WebRTC connection
+  // HTTP polling — check stream status every 3s, open WS only when live
   useEffect(() => {
-    let ws: WebSocket;
-    let pc: RTCPeerConnection;
-    let reconnectTimer: ReturnType<typeof setTimeout>;
+    let ws: WebSocket | null = null;
+    let pc: RTCPeerConnection | null = null;
+    let pollTimer: ReturnType<typeof setInterval>;
+    let wasLive = false;
 
-    const connect = (displayName: string) => {
-      ws = new WebSocket(`${WS_URL}?role=viewer&name=${encodeURIComponent(displayName)}`);
+    const displayName = localStorage.getItem("live_name") || "Guest";
+    const savedName = localStorage.getItem("live_name");
+    if (savedName) { setViewerName(savedName); setNameSet(true); }
+
+    const closeWS = () => {
+      ws?.close();
+      ws = null;
+      wsRef.current = null;
+      pc?.close();
+      pc = null;
+      pcRef.current = null;
+    };
+
+    const openWS = (name: string) => {
+      if (ws && ws.readyState <= WebSocket.OPEN) return; // already open
+      ws = new WebSocket(`${WS_URL}?role=viewer&name=${encodeURIComponent(name)}`);
       wsRef.current = ws;
 
       ws.onmessage = async (e) => {
         const msg = JSON.parse(e.data);
 
-        if (msg.type === "stream-offline") setStatus("offline");
-
-        if (msg.type === "stream-info" || msg.type === "stream-started") {
-          setInfo(msg.info);
-          setStatus("connecting");
-          // Reconnect so server sends viewer-joined → broadcaster sends offer
-          ws.close();
-        }
-
         if (msg.type === "stream-ended") {
           setStatus("offline");
           setInfo(null);
           setComments([]);
-          if (pc) pc.close();
+          closeWS();
         }
 
         if (msg.type === "chat-history") setComments(msg.comments || []);
-
         if (msg.type === "chat" && msg.comment) {
           setComments(prev => [...prev.slice(-199), msg.comment]);
         }
@@ -178,25 +183,25 @@ const LiveTV = () => {
           ]});
           pcRef.current = pc;
           pc.ontrack = (event) => {
-            const stream = event.streams[0];
             if (videoRef.current) {
-              videoRef.current.srcObject = stream;
+              videoRef.current.srcObject = event.streams[0];
               videoRef.current.play().catch(() => {});
             }
             setStatus("live");
           };
-          pc.onicecandidate = (event) => {
-            if (event.candidate) ws.send(JSON.stringify({ type: "ice-candidate", candidate: event.candidate }));
+          pc.onicecandidate = (ev) => {
+            if (ev.candidate && ws?.readyState === WebSocket.OPEN)
+              ws.send(JSON.stringify({ type: "ice-candidate", candidate: ev.candidate }));
           };
           pc.onconnectionstatechange = () => {
-            if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
-              setStatus("offline");
+            if (pc && (pc.connectionState === "failed" || pc.connectionState === "disconnected")) {
+              setStatus("connecting");
             }
           };
           await pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
-          ws.send(JSON.stringify({ type: "answer", sdp: answer }));
+          ws?.send(JSON.stringify({ type: "answer", sdp: answer }));
         }
 
         if (msg.type === "ice-candidate" && pc) {
@@ -204,23 +209,48 @@ const LiveTV = () => {
         }
       };
 
-      ws.onclose = () => { reconnectTimer = setTimeout(() => connect(displayName), 3000); };
+      ws.onclose = () => {
+        ws = null;
+        wsRef.current = null;
+      };
     };
 
-    fetch(STATUS_URL)
-      .then(r => r.json())
-      .then(d => {
-        if (d.live) { setInfo(d.info); setViewers(d.viewers); setComments(d.comments || []); }
-        else setStatus("offline");
-      })
-      .catch(() => setStatus("offline"));
+    const poll = async () => {
+      try {
+        const r = await fetch(STATUS_URL);
+        const d = await r.json();
+        if (d.live) {
+          setInfo(d.info);
+          setViewers(d.viewers);
+          if (!wasLive) {
+            wasLive = true;
+            setStatus("connecting");
+            setComments(d.comments || []);
+            openWS(displayName);
+          }
+        } else {
+          if (wasLive) {
+            wasLive = false;
+            setStatus("offline");
+            setInfo(null);
+            closeWS();
+          } else if (status === "checking") {
+            setStatus("offline");
+          }
+        }
+      } catch {
+        if (status === "checking") setStatus("offline");
+      }
+    };
 
-    const savedName = localStorage.getItem("live_name") || "";
-    if (savedName) { setViewerName(savedName); setNameSet(true); connect(savedName); }
-    else connect("Guest");
+    poll(); // immediate first check
+    pollTimer = setInterval(poll, 3000);
 
-    return () => { clearTimeout(reconnectTimer); ws?.close(); pc?.close(); };
-  }, []);
+    return () => {
+      clearInterval(pollTimer);
+      closeWS();
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSetName = (e: React.FormEvent) => {
     e.preventDefault();
