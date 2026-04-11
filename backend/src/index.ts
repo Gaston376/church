@@ -1,5 +1,6 @@
 export interface Env {
   DB: D1Database;
+  OTP_STORE: KVNamespace;
   QSSN_API_KEY: string;
   ADMIN_PASSWORD: string;
   STREAM_HUB: DurableObjectNamespace;
@@ -132,7 +133,7 @@ function updateHtml(title: string, content: string, date: string) {
 </html>`;
 }
 
-function loginPage(error = "") {
+function loginPage(error = "", otpSent = false) {
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Admin Login — ${MINISTRY_NAME}</title>
 <style>
@@ -144,9 +145,11 @@ h1{font-size:20px;color:#1a1a1a;margin-bottom:4px}
 .sub{color:#888;font-size:13px;margin-bottom:28px;font-style:italic}
 input{width:100%;padding:14px 16px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:15px;margin-bottom:16px;transition:border-color .2s;outline:none}
 input:focus{border-color:#c0392b}
-button{background:linear-gradient(135deg,#c0392b,#e67e22);color:#fff;border:none;padding:15px;border-radius:10px;font-size:16px;font-weight:bold;cursor:pointer;width:100%;letter-spacing:.5px;transition:opacity .2s}
+button{background:linear-gradient(135deg,#c0392b,#e67e22);color:#fff;border:none;padding:15px;border-radius:10px;font-size:16px;font-weight:bold;cursor:pointer;width:100%;letter-spacing:.5px;transition:opacity .2s;margin-bottom:10px}
 button:hover{opacity:.9}
+button.secondary{background:#f0f0f0;color:#333;font-size:14px;padding:12px}
 .error{background:#fdf0f0;border:1px solid #f5c6cb;color:#c0392b;padding:12px;border-radius:8px;margin-bottom:16px;font-size:13px}
+.success{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;padding:12px;border-radius:8px;margin-bottom:16px;font-size:13px}
 .footer{margin-top:24px;color:#bbb;font-size:11px}
 </style>
 </head><body>
@@ -155,11 +158,25 @@ button:hover{opacity:.9}
   <h1>Admin Portal</h1>
   <p class="sub">${MINISTRY_NAME}</p>
   ${error ? `<div class="error">${error}</div>` : ""}
-  <form method="POST">
-    <input type="password" name="password" placeholder="Enter admin password" required autofocus>
+  ${otpSent ? `<div class="success">✓ A one-time password has been sent to the ministry email. It expires in 10 minutes.</div>` : ""}
+  ${!otpSent ? `
+  <form method="POST" action="/admin/request-otp">
+    <button type="submit">Send One-Time Password to Email</button>
+  </form>` : `
+  <form method="POST" action="/admin/verify-otp">
+    <input type="text" name="otp" placeholder="Enter 6-digit OTP" maxlength="6" required autofocus autocomplete="off">
     <button type="submit">Sign In</button>
   </form>
+  <form method="POST" action="/admin/request-otp">
+    <button type="submit" class="secondary">Resend OTP</button>
+  </form>`}
   <p class="footer">Restricted access — authorized personnel only</p>
+  <div style="margin-top:20px;background:#fff8e1;border:1px solid #f59e0b;border-radius:10px;padding:14px;text-align:left;font-size:12px;color:#92400e;line-height:1.7">
+    <strong>Security Notice:</strong><br>
+    &bull; Never share your OTP with anyone.<br>
+    &bull; Do NOT sign in to your admin email on shared, public, or other people's devices. Anyone with access to your email can receive OTPs and access this portal.<br>
+    &bull; Always sign out of your email after retrieving the OTP on any device that is not yours.
+  </div>
 </div>
 </body></html>`;
 }
@@ -230,6 +247,7 @@ video{width:100%;border-radius:10px;background:#000;max-height:220px}
       <input id="live-desc" placeholder="e.g. Join us for praise and worship" style="width:100%;padding:11px 13px;border:1.5px solid #e0e0e0;border-radius:9px;font-size:14px;margin-bottom:10px">
       <button class="go-live-btn" id="go-live-btn" onclick="startLive()">Start Live Stream</button>
       <button class="end-btn" id="end-live-btn" onclick="endLive()" style="display:none">End Stream</button>
+      <button class="end-btn" id="flip-btn" onclick="flipCamera()" style="display:none;background:#555;margin-top:6px">Flip Camera (Front/Back)</button>
       <div id="viewer-count" style="margin-top:10px;font-size:13px;color:#888;display:none">
         <span id="vc">0</span> viewers watching
       </div>
@@ -268,6 +286,7 @@ let ws=null,pc=null,stream=null,viewers={};
 let intentionalClose=false;
 let notifiedLive=false;
 let liveTitle='',liveDesc='';
+let facingMode='environment';
 const WS='wss://towerintercessoryministry.towerintercessoryministry.workers.dev/stream';
 
 function connectWS(){
@@ -319,13 +338,36 @@ function connectWS(){
   };
 }
 
+async function flipCamera(){
+  facingMode = facingMode === 'environment' ? 'user' : 'environment';
+  // Stop current tracks
+  if(stream) stream.getTracks().forEach(t=>t.stop());
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:facingMode},audio:true});
+    document.getElementById('preview').srcObject = stream;
+    // Replace tracks in all active peer connections
+    const videoTrack = stream.getVideoTracks()[0];
+    const audioTrack = stream.getAudioTracks()[0];
+    Object.values(viewers).forEach(p=>{
+      p.getSenders().forEach(sender=>{
+        if(sender.track && sender.track.kind==='video' && videoTrack) sender.replaceTrack(videoTrack);
+        if(sender.track && sender.track.kind==='audio' && audioTrack) sender.replaceTrack(audioTrack);
+      });
+    });
+  }catch(err){
+    alert('Could not switch camera: '+err.message);
+    facingMode = facingMode === 'environment' ? 'user' : 'environment'; // revert
+  }
+}
+
 async function startLive(){
   liveTitle=document.getElementById('live-title').value||'Live Service';
   liveDesc=document.getElementById('live-desc').value||'';
   try{
-    stream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facingMode},audio:true});
     const preview=document.getElementById('preview');
     preview.srcObject=stream;preview.style.display='block';
+    document.getElementById('flip-btn').style.display='block';
     intentionalClose=false;
     notifiedLive=false;
     connectWS();
@@ -352,6 +394,7 @@ function endLive(){
   document.getElementById('live-status').textContent='Not streaming';
   document.getElementById('go-live-btn').style.display='block';
   document.getElementById('end-live-btn').style.display='none';
+  document.getElementById('flip-btn').style.display='none';
   document.getElementById('viewer-count').style.display='none';
   document.getElementById('chat-box').style.display='none';
   // Keep chat history visible — don't wipe on end
@@ -484,25 +527,104 @@ export default {
 
     // Admin login and dashboard
     if (pathname === "/admin") {
-      if (method === "POST") {
-        const form = await request.formData();
-        if (form.get("password") === env.ADMIN_PASSWORD) {
-          return new Response(null, {
-            status: 302,
-            headers: {
-              "Location": "/admin",
-              "Set-Cookie": "admin_session=true; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400"
-            }
-          });
-        }
-        return htmlRes(loginPage("Invalid password. Try again."));
+      // Always check lockout first — even on page load/refresh
+      const lockout = await env.OTP_STORE.get("otp_lockout");
+      if (lockout) {
+        const { until } = JSON.parse(lockout) as { until: number };
+        const remaining = Math.ceil((until - Date.now()) / 60000);
+        return htmlRes(loginPage(`Too many failed attempts. Portal locked for ${remaining} more minute(s). Refreshing will not help.`, false));
       }
-      
+
       if (!cookies.includes("admin_session=true")) {
         return htmlRes(loginPage());
       }
-      
       return htmlRes(adminPage());
+    }
+
+    // POST /admin/request-otp — generate and email a one-time password
+    if (method === "POST" && pathname === "/admin/request-otp") {
+      // Block if locked out
+      const lockout = await env.OTP_STORE.get("otp_lockout");
+      if (lockout) {
+        const { until } = JSON.parse(lockout) as { until: number };
+        const remaining = Math.ceil((until - Date.now()) / 60000);
+        return htmlRes(loginPage(`Portal is locked. Please wait ${remaining} more minute(s) before requesting a new OTP.`, false));
+      }
+
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      await env.OTP_STORE.put("otp", JSON.stringify({ code: otp, used: false, attempts: 0 }), { expirationTtl: 600 });
+
+      const otpHtml = `
+        <div style="font-family:Georgia,serif;max-width:500px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08)">
+          <div style="background:linear-gradient(135deg,#c0392b,#e67e22,#f1c40f);padding:32px;text-align:center">
+            <h1 style="color:#fff;margin:0;font-size:22px">${MINISTRY_NAME}</h1>
+            <p style="color:rgba(255,255,255,0.85);margin:6px 0 0;font-size:13px">Admin Portal - One-Time Password</p>
+          </div>
+          <div style="padding:36px;text-align:center">
+            <p style="color:#555;margin-bottom:16px">Your one-time login code is:</p>
+            <div style="font-size:42px;font-weight:bold;letter-spacing:12px;color:#c0392b;background:#fdf0f0;padding:20px;border-radius:12px;margin:0 auto 20px">${otp}</div>
+            <p style="color:#888;font-size:13px">This code expires in <strong>10 minutes</strong> and can only be used once.</p>
+            <div style="margin-top:24px;background:#fff8e1;border:1px solid #f59e0b;border-radius:10px;padding:16px;text-align:left">
+              <p style="color:#92400e;font-size:13px;font-weight:bold;margin-bottom:8px">⚠ Security Warning</p>
+              <ul style="color:#92400e;font-size:12px;line-height:1.8;padding-left:16px">
+                <li>Never share this OTP with anyone — not even ministry staff.</li>
+                <li>Do NOT allow your admin email to be signed in on any other device. Anyone with access to your email can receive OTPs and take over the admin portal.</li>
+                <li>After reading this OTP, sign out of your email on shared or public devices immediately.</li>
+                <li>If you did not request this OTP, your portal may be under attack — do nothing and the code will expire.</li>
+              </ul>
+            </div>
+            <p style="color:#aaa;font-size:12px;margin-top:16px">If you did not request this, ignore this email.</p>
+          </div>
+        </div>`;
+
+      await sendEmail(env.QSSN_API_KEY, "towerintercessoryministry@gmail.com", `Admin OTP - ${MINISTRY_NAME}`, otpHtml);
+      return htmlRes(loginPage("", true));
+    }
+
+    // POST /admin/verify-otp — validate the OTP
+    if (method === "POST" && pathname === "/admin/verify-otp") {
+      const form = await request.formData();
+      const entered = (form.get("otp") as string || "").trim();
+
+      // Check lockout first
+      const lockout = await env.OTP_STORE.get("otp_lockout");
+      if (lockout) {
+        const { until } = JSON.parse(lockout) as { until: number };
+        const remaining = Math.ceil((until - Date.now()) / 60000);
+        return htmlRes(loginPage(`Too many failed attempts. Portal locked for ${remaining} more minute(s).`, false));
+      }
+
+      const stored = await env.OTP_STORE.get("otp");
+      if (!stored) return htmlRes(loginPage("OTP expired or not requested. Please request a new one.", false));
+
+      const { code, used, attempts = 0 } = JSON.parse(stored) as { code: string; used: boolean; attempts: number };
+
+      if (used) return htmlRes(loginPage("This OTP has already been used. Please request a new one.", false));
+
+      if (entered !== code) {
+        const newAttempts = attempts + 1;
+        if (newAttempts >= 3) {
+          // Lock portal for 10 minutes
+          await env.OTP_STORE.delete("otp");
+          await env.OTP_STORE.put("otp_lockout", JSON.stringify({ until: Date.now() + 10 * 60 * 1000 }), { expirationTtl: 600 });
+          return htmlRes(loginPage("Too many failed attempts. Admin portal is locked for 10 minutes.", false));
+        }
+        // Save updated attempt count
+        await env.OTP_STORE.put("otp", JSON.stringify({ code, used: false, attempts: newAttempts }), { expirationTtl: 600 });
+        const remaining = 3 - newAttempts;
+        return htmlRes(loginPage(`Invalid OTP. ${remaining} attempt${remaining === 1 ? "" : "s"} remaining.`, true));
+      }
+
+      // Correct — mark as used immediately
+      await env.OTP_STORE.put("otp", JSON.stringify({ code, used: true, attempts }), { expirationTtl: 60 });
+
+      return new Response(null, {
+        status: 302,
+        headers: {
+          "Location": "/admin",
+          "Set-Cookie": "admin_session=true; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400",
+        },
+      });
     }
 
     // POST /subscribe

@@ -12,6 +12,10 @@ binding = "DB"
 database_name = "subscribers"
 database_id = "cf0df486-4b69-4fbd-835b-7986768e1659"
 
+[[kv_namespaces]]
+binding = "OTP_STORE"
+id = "073373241ef44f0b9ec5ad9c390adfac"
+
 [[durable_objects.bindings]]
 name = "STREAM_HUB"
 class_name = "StreamHub"

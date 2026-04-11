@@ -14,8 +14,8 @@ import worship5 from "@/assets/worship-5.jpg";
 const contactInfo = [
   { icon: User, label: "Lead Pastor", value: "Prophet Chibuzor Nwankwo" },
   { icon: MapPin, label: "Location", value: "Massajja, Wakiso District, Kampala, Uganda" },
-  { icon: Phone, label: "Phone", value: "+256 752 734 581" },
-  { icon: Mail, label: "Email", value: "towerintercessoryministry@gmail.com" },
+  { icon: Phone, label: "Phone", value: "+256 745 393 840" },
+  { icon: Mail, label: "Email", value: "nwankwo.Chibuzor@yahoo.com" },
   { icon: Clock, label: "Service Times", value: "Tue 9:00 AM | Thu 10:00 AM | Sun 9:00 AM" },
 ];
 

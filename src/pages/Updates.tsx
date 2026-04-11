@@ -73,25 +73,25 @@ const Updates = () => {
               >
                 <div className="absolute inset-0">
                   <img src={fallbackImages[0]} alt={featured.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/90 via-foreground/40 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/10" />
                 </div>
                 <div className="relative z-10 p-8 md:p-12 min-h-[380px] flex flex-col justify-end">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
                       <Sparkles size={11} /> Latest
                     </span>
-                    <span className="text-background/70 text-sm flex items-center gap-1">
+                    <span className="text-white/70 text-sm flex items-center gap-1">
                       <Calendar size={13} /> {featured.date}
                     </span>
                   </div>
-                  <h2 className="font-heading text-3xl md:text-4xl font-bold text-background leading-tight">{featured.title}</h2>
+                  <h2 className="font-heading text-3xl md:text-4xl font-bold text-white leading-tight">{featured.title}</h2>
                   <AnimatePresence>
                     {active === featured.id && (
                       <motion.p
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="mt-4 text-background/80 text-base leading-relaxed max-w-2xl"
+                        className="mt-4 text-white/80 text-base leading-relaxed max-w-2xl"
                       >
                         {featured.content}
                       </motion.p>
@@ -123,8 +123,8 @@ const Updates = () => {
                           alt={u.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
-                        <span className="absolute bottom-3 left-4 text-background/80 text-xs flex items-center gap-1">
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                        <span className="absolute bottom-3 left-4 text-white/80 text-xs flex items-center gap-1">
                           <Calendar size={11} /> {u.date}
                         </span>
                       </div>

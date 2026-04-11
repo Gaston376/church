@@ -53,12 +53,7 @@ const LiveTV = () => {
   const [nameSet, setNameSet] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
-  const [tickerUpdates, setTickerUpdates] = useState<string[]>([
-    "Welcome to Massajja Tower of Intercessory Ministry Live TV",
-    "God First — Winning Souls, Setting Captives Free",
-    "Sunday Worship Service every Sunday at 10:00 AM",
-    "Intercessory Prayer: Thursday 6:00 AM",
-  ]);
+  const [tickerUpdates, setTickerUpdates] = useState<string[]>([]);
 
   // Init YouTube IFrame API player
   useEffect(() => {
@@ -417,32 +412,41 @@ const LiveTV = () => {
               </div>
             )}
 
-            {/* Marquee ticker */}
+            {/* Marquee ticker — shows live stream info when live, updates otherwise */}
+            {(tickerUpdates.length > 0 || info) && (
             <div className="absolute bottom-0 left-0 right-0 z-30 bg-foreground/80 backdrop-blur-sm border-t border-white/10 overflow-hidden py-2">
               <div className="flex whitespace-nowrap" style={{ animation: "marquee 30s linear infinite" }}>
-                {[...tickerUpdates, ...tickerUpdates].map((text, i) => (
-                  <span key={i} className="text-background text-sm font-medium px-8 flex-shrink-0">
-                    <span className="text-primary font-bold mr-2">●</span>
-                    {text}
-                    <span className="mx-8 text-primary/40">|</span>
-                  </span>
-                ))}
+                {(() => {
+                  const items = info
+                    ? [`${info.title}${info.description ? ` — ${info.description}` : ""}`]
+                    : tickerUpdates;
+                  return [...items, ...items].map((text, i) => (
+                    <span key={i} className="text-white text-sm font-medium px-8 flex-shrink-0">
+                      <span className="text-primary font-bold mr-2">●</span>
+                      {text}
+                      <span className="mx-8 text-primary/40">|</span>
+                    </span>
+                  ));
+                })()}
               </div>
             </div>
-          </motion.div>
+            )}
 
-          {/* Stream info bar (when live) */}
-          {info && (
-            <div className="mt-4 bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-between gap-4">
-              <div>
-                <h2 className="font-heading text-lg font-bold text-background">{info.title}</h2>
-                {info.description && <p className="text-background/50 text-sm mt-1">{info.description}</p>}
+            {/* Stream title & description overlay — inside player, visible when live */}
+            {info && status === "live" && (
+              <div className="absolute top-12 left-3 right-3 z-30">
+                <div className="bg-black/60 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
+                  <div>
+                    <h2 className="font-heading text-sm font-bold text-white leading-tight">{info.title}</h2>
+                    {info.description && <p className="text-white/70 text-xs mt-0.5">{info.description}</p>}
+                  </div>
+                  <div className="flex items-center gap-1 text-white/50 text-xs flex-shrink-0">
+                    <Users size={12} /> {viewers}
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-1 text-background/40 text-sm flex-shrink-0">
-                <Users size={14} /> {viewers}
-              </div>
-            </div>
-          )}
+            )}
+          </motion.div>
 
           {/* Floating chat button */}
           <button
